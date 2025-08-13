@@ -4,69 +4,86 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 
 public class LogoutRequest {
-    
+
     @NotBlank(message = "Refresh token is required")
     @JsonProperty("refresh_token")
     private String refreshToken;
-    
-    // Default constructor (replaces @NoArgsConstructor)
+
+    @NotBlank(message = "Access token is required")
+    @JsonProperty("access_token")
+    private String accessToken;
+
     public LogoutRequest() {
     }
-    
-    // All-args constructor (replaces @AllArgsConstructor)
-    public LogoutRequest(String refreshToken) {
+
+    public LogoutRequest(String refreshToken, String accessToken) {
         this.refreshToken = refreshToken;
+        this.accessToken = accessToken;
     }
-    
-    // Getter and setter (part of @Data replacement)
+
     public String getRefreshToken() {
         return refreshToken;
     }
-    
+
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
-    
-    // equals method (part of @Data replacement)
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        
+
         LogoutRequest that = (LogoutRequest) o;
-        
-        return refreshToken != null ? refreshToken.equals(that.refreshToken) : that.refreshToken == null;
+
+        if (refreshToken != null ? !refreshToken.equals(that.refreshToken) : that.refreshToken != null) return false;
+        return accessToken != null ? accessToken.equals(that.accessToken) : that.accessToken == null;
     }
-    
-    // hashCode method (part of @Data replacement)
+
     @Override
     public int hashCode() {
-        return refreshToken != null ? refreshToken.hashCode() : 0;
+        int result = refreshToken != null ? refreshToken.hashCode() : 0;
+        result = 31 * result + (accessToken != null ? accessToken.hashCode() : 0);
+        return result;
     }
-    
-    // toString method (part of @Data replacement)
+
     @Override
     public String toString() {
         return "LogoutRequest{" +
                 "refreshToken='" + (refreshToken != null ? "[PRESENT]" : "[NOT PRESENT]") + '\'' +
+                ", accessToken='" + (accessToken != null ? "[PRESENT]" : "[NOT PRESENT]") + '\'' +
                 '}';
     }
-    
-    // Builder implementation (replaces @Builder)
+
+    // Builder implementation
     public static Builder builder() {
         return new Builder();
     }
-    
+
     public static class Builder {
         private String refreshToken;
-        
+        private String accessToken;
+
         public Builder refreshToken(String refreshToken) {
             this.refreshToken = refreshToken;
             return this;
         }
-        
+
+        public Builder accessToken(String accessToken) {
+            this.accessToken = accessToken;
+            return this;
+        }
+
         public LogoutRequest build() {
-            return new LogoutRequest(refreshToken);
+            return new LogoutRequest(refreshToken, accessToken);
         }
     }
 }

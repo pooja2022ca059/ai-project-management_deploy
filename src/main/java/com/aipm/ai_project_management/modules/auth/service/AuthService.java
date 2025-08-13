@@ -6,7 +6,7 @@ import com.aipm.ai_project_management.modules.auth.dto.*;
 public interface AuthService {
     LoginResponse login(LoginRequest loginRequest, String ipAddress, String userAgent);
     void register(RegisterRequest registerRequest);
-    void logout(String refreshToken);
+    void logout(String refreshToken, String accessToken);
     void logoutAllDevices(Long userId);
 }
 

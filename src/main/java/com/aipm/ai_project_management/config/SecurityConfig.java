@@ -31,12 +31,11 @@ import java.util.Arrays;
         prePostEnabled = true
 )
 public class SecurityConfig {
-    
+
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    
-    // Constructor injection instead of field injection with @Autowired
+
     public SecurityConfig(CustomUserDetailsService customUserDetailsService,
                           JwtAuthenticationEntryPoint unauthorizedHandler,
                           JwtAuthenticationFilter jwtAuthenticationFilter) {
@@ -44,12 +43,12 @@ public class SecurityConfig {
         this.unauthorizedHandler = unauthorizedHandler;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
-    
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -57,103 +56,82 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-    
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-    
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(unauthorizedHandler)
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authorizeHttpRequests(auth -> auth
-                        // Public endpoints - FIXED: No content after **
-                        .requestMatchers(
-                                "/",
-                                "/favicon.ico",
-                                "/**" // This covers all static files
-                        ).permitAll()
-                        
-                        // Alternative: Specific patterns for static files
-                        .requestMatchers(
-                                "/static/**",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**",
-                                "/fonts/**"
-                        ).permitAll()
-                        
-                        // Extension-based matching (correct way)
-                        .requestMatchers(request -> {
-                            String path = request.getRequestURI();
-                            return path.endsWith(".png") || 
-                                   path.endsWith(".gif") || 
-                                   path.endsWith(".svg") || 
-                                   path.endsWith(".jpg") || 
-                                   path.endsWith(".jpeg") ||
-                                   path.endsWith(".html") || 
-                                   path.endsWith(".css") || 
-                                   path.endsWith(".js") ||
-                                   path.endsWith(".ico");
-                        }).permitAll()
-                        
-                        // Swagger/OpenAPI endpoints
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
-                        
-                        // Authentication endpoints
-                        .requestMatchers("/api/auth/**").permitAll()
-                        
-                        // Health check endpoints
-                        .requestMatchers("/actuator/**").permitAll()
-                        
-                        // Admin only endpoints
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        
-//                        // Project Manager endpoints
-//                        .requestMatchers("/api/projects/*/manage/**").hasAnyRole("ADMIN", "PROJECT_MANAGER")
-//                        
-//                        // Client portal endpoints
-//                        .requestMatchers("/api/client-portal/**").hasAnyRole("CLIENT", "ADMIN")
-                        
-                        // All other endpoints require authentication
-                        .anyRequest().authenticated()
-                )
-                .authenticationProvider(authenticationProvider());
-        
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(unauthorizedHandler)
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .authorizeHttpRequests(auth -> auth
+                // Public endpoints (static, swagger, health, etc.)
+                .requestMatchers("/", "/favicon.ico",
+                        "/static/**", "/css/**", "/js/**", "/images/**", "/fonts/**",
+                        "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**",
+                        "/actuator/**"
+                ).permitAll()
+                // Extension-based matching for static resources
+                .requestMatchers(request -> {
+                    String path = request.getRequestURI();
+                    return path.endsWith(".png") ||
+                           path.endsWith(".gif") ||
+                           path.endsWith(".svg") ||
+                           path.endsWith(".jpg") ||
+                           path.endsWith(".jpeg") ||
+                           path.endsWith(".html") ||
+                           path.endsWith(".css") ||
+                           path.endsWith(".js") ||
+                           path.endsWith(".ico");
+                }).permitAll()
+                // Only allow login, register, refresh as public
+                .requestMatchers(
+                        "/api/auth/login",
+                        "/api/auth/register",
+                        "/api/auth/refresh"
+                ).permitAll()
+                // PROTECT logout, logout-all, get current user
+                .requestMatchers(
+                        "/api/auth/logout",
+                        "/api/auth/logout-all",
+                        "/api/auth/user"
+                ).authenticated()
+                // Admin endpoints
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // All other endpoints require authentication
+                .anyRequest().authenticated()
+            )
+            .authenticationProvider(authenticationProvider());
+
         // Add JWT filter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-        	    "http://localhost:3000",
-        	    "http://localhost:8080",
-        	    "http://localhost:5173"
-        	));
+            "http://localhost:3000",
+            "http://localhost:8080",
+            "http://localhost:5173"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
         configuration.setExposedHeaders(Arrays.asList("x-auth-token"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

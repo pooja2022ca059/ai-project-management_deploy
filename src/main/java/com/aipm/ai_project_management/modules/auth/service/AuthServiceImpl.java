@@ -8,6 +8,7 @@ import com.aipm.ai_project_management.modules.auth.entity.User;
 import com.aipm.ai_project_management.modules.auth.entity.UserSession;
 import com.aipm.ai_project_management.modules.auth.repository.SessionRepository;
 import com.aipm.ai_project_management.modules.auth.repository.UserRepository;
+import com.aipm.ai_project_management.modules.auth.service.JwtBlacklistService;
 import com.aipm.ai_project_management.modules.auth.security.JwtTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
     private final SessionRepository sessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtBlacklistService jwtBlacklistService;
     
     // Constructor to replace @RequiredArgsConstructor
     public AuthServiceImpl(AuthenticationManager authenticationManager, 
@@ -46,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
         this.sessionRepository = sessionRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+		this.jwtBlacklistService = new JwtBlacklistService();
     }
     
     @Override
@@ -132,13 +135,16 @@ public class AuthServiceImpl implements AuthService {
     }
     
     @Override
-    public void logout(String refreshToken) {
+    public void logout(String refreshToken, String accessToken) {
         UserSession session = sessionRepository.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
-        
+
         session.revoke("User logout");
         sessionRepository.save(session);
-        
+
+        // Blacklist JWT access token
+        jwtBlacklistService.blacklistToken(accessToken);
+
         log.info("User {} logged out", session.getUser().getEmail());
     }
     
