@@ -145,6 +145,13 @@ public class TaskDTO {
 	public void setAssigneeId(Long assigneeId) {
 	    this.assigneeId = assigneeId;
 	}
+	
+	
+
+    // ----- NEW helper method -----
+    public String getPriorityName() {
+        return priority != null ? priority.name() : "UNKNOWN";
+    }
 	private String title;
     private String description;
     private TaskStatus status;

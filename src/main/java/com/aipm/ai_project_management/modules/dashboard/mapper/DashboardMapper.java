@@ -64,18 +64,21 @@ public class DashboardMapper {
 
     // ---- Team ----
     public List<TeamTaskTodayDTO> toTeamTaskToday(List<TaskDTO> tasks) {
+        if (tasks == null) return List.of(); // handle null list
+
         return tasks.stream().map(t -> {
             TeamTaskTodayDTO dto = new TeamTaskTodayDTO();
             dto.setId(t.getId());
-            dto.setTitle(t.getTitle());
-            dto.setProject(t.getProjectName());
-            dto.setPriority(t.getPriority().name());
-            dto.setDueDate(t.getDueDate() != null ? t.getDueDate().toString() : null);
-            dto.setStatus(t.getStatus().name());
+            dto.setTitle(t.getTitle() != null ? t.getTitle() : "No Title");
+            dto.setProject(t.getProjectName() != null ? t.getProjectName() : "No Project");
+            dto.setPriority(t.getPriorityName()); // safe now
+            dto.setDueDate(t.getDueDate() != null ? t.getDueDate().toString() : "No Due Date");
+            dto.setStatus(t.getStatus() != null ? t.getStatus().name() : "UNKNOWN"); // safe
             dto.setEstimatedHours(t.getEstimatedHours() != null ? t.getEstimatedHours().intValue() : 0);
             return dto;
         }).collect(Collectors.toList());
     }
+
 
     public TeamProductivityMetricsDTO toTeamProductivityMetrics(int tasksCompletedToday, double hoursLogged, int streakDays) {
         TeamProductivityMetricsDTO dto = new TeamProductivityMetricsDTO();

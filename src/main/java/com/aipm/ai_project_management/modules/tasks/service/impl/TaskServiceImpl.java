@@ -138,11 +138,28 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(readOnly = true)
     public Page<TaskDTO> getTasksAssignedToUser(Long userId, Map<String, String> filters, Pageable pageable) {
         logger.info("Fetching tasks assigned to user: " + userId + " with filters: " + filters);
-        
-        // TODO: Implement user tasks retrieval
+
+        // ✅ agar pageable null aaya to default set karo
+        if (pageable == null) {
+            pageable = org.springframework.data.domain.PageRequest.of(0, 10); // default page=0, size=10
+        }
+
+        // TODO: Replace with DB query (taskRepository.findByAssigneeId(userId, pageable))
         List<TaskDTO> tasks = new ArrayList<>();
+
+        // sample task for testing
+        for (int i = 1; i <= 5; i++) {
+            TaskDTO task = new TaskDTO();
+            task.setId((long) i);
+            task.setTitle("User Task " + i);
+            task.setAssigneeId(userId);
+            task.setStatus(TaskStatus.TODO);
+            tasks.add(task);
+        }
+
         return new PageImpl<>(tasks, pageable, tasks.size());
     }
+
 
     @Override
     public TaskDTO updateTask(Long id, UpdateTaskRequest request) {

@@ -5,6 +5,8 @@ import com.aipm.ai_project_management.common.response.ApiResponse;
 import com.aipm.ai_project_management.common.response.PageResponse;
 import com.aipm.ai_project_management.modules.tasks.dto.*;
 import com.aipm.ai_project_management.modules.tasks.service.TaskService;
+import org.springframework.data.domain.Sort;
+
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -113,5 +115,16 @@ public class TaskController {
     public ResponseEntity<ApiResponse<String>> deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Task deleted successfully"));
+    }
+    
+    @GetMapping("/users/{userId}/tasks")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER', 'TEAM_MEMBER')")
+    public ResponseEntity<ApiResponse<PageResponse<TaskDTO>>> getTasksAssignedToUser(
+            @PathVariable Long userId,
+            @RequestParam(required = false) Map<String, String> filters,
+            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+
+        Page<TaskDTO> tasks = taskService.getTasksAssignedToUser(userId, filters, pageable);
+        return ResponseEntity.ok(ApiResponse.success(new PageResponse<>(tasks)));
     }
 }
