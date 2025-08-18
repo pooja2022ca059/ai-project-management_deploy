@@ -27,7 +27,7 @@ public class DashboardController {
     }
 
     @GetMapping("/pm")
-    @PreAuthorize("hasRole('PM')")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ApiResponse<PmDashboardDTO> getPmDashboard(Authentication authentication) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         Long userId = principal.getId();
