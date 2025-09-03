@@ -17,7 +17,7 @@ public class WebConfig {
                          .allowedOrigins(
                             "http://localhost:3000", // local testing
                             "https://frontend-indol-sigma-48.vercel.app" // Vercel domain
-                        )) 
+                        ) 
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
