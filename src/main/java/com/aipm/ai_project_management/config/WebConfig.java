@@ -14,7 +14,10 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("*vercel.app") 
+                         .allowedOrigins(
+                            "http://localhost:3000", // local testing
+                            "https://frontend-indol-sigma-48.vercel.app" // Vercel domain
+                        )) 
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
